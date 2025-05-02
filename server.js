@@ -11,18 +11,23 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('OK'));
 
 app.post('/fetch', async (req, res) => {
-  const { url } = req.body;
-  console.log(`Attempting to fetch: ${url}`);
+  const { url, method = 'GET', headers = {}, data = null } = req.body;
   try {
-    const response = await axios.get(url, { timeout: 3000 });
-    console.log(`Fetched successfully: ${response.status}`);
+    const response = await axios({
+      url,
+      method,
+      headers,
+      data,
+      timeout: 5000,
+      // allow self-signed certs if needed
+      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+    });
     res.send({
       status: response.status,
       headers: response.headers,
       data: response.data
     });
   } catch (err) {
-    console.error('Error occurred while fetching:', err.message);
     res.status(500).send(err.toString());
   }
 });
